@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Fixlet>
+		<Title>Invoke - Analyze Application Usage - Windows</Title>
+		<Description><![CDATA[&lt;enter a description of the problem and the corrective action here&gt; ]]></Description>
+		<Relevance>windows of operating system</Relevance>
+		<Relevance>exists keys of key "HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\SrpV2" of native registry </Relevance>
+		<Category></Category>
+		<Source>Internal</Source>
+		<SourceID></SourceID>
+		<SourceReleaseDate>2016-07-16</SourceReleaseDate>
+		<SourceSeverity></SourceSeverity>
+		<CVENames></CVENames>
+		<SANSID></SANSID>
+		<Domain>BESC</Domain>
+		<DefaultAction ID="Action1">
+			<Description>
+				<PreLink>Click </PreLink>
+				<Link>here</Link>
+				<PostLink> to deploy this action.</PostLink>
+			</Description>
+			<ActionScript MIMEType="application/x-Fixlet-Windows-Shell"><![CDATA[action uses wow64 redirection {not x64 of operating system}
+
+parameter "PowerShellExe"="{ pathname of file ((it as string) of value "Path" of key "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell" of native registry) }"
+
+parameter "Storage"="{pathname of folder "__Global" of data folder of client}\C3AppUsage"
+
+folder create "{parameter "Storage"}"
+
+delete __createfile
+delete powershell.ps1
+
+createfile until _end_
+param (
+    $UsageFile = "AppUsage.xml"
+)
+
+$VerbosePreference = "Continue";
+
+function load-usage {{
+    param (
+        [string] $File
+    )
+    try {{
+        return Import-Clixml $File
+    } catch {{
+        return new-object psobject -property @{{
+            FirstUpdate = (get-date)
+            LastUpdate = $null
+            Applications = @{{}
+        }
+    }
+}
+
+function get-ApplockerLogs {{
+    param (
+        $EventsAfter
+    )
+    if (!($EventsAfter)) {{ $EventsAfter = [datetime] (0) }
+
+    $SearchTime = $EventsAfter.ToUniversalTime().ToString("o")
+
+    $Logs = get-winevent -logname "Microsoft-Windows-AppLocker/EXE and DLL" -FilterXPath "*[System[TimeCreated[@SystemTime > '$SearchTime']]]"
+
+    return $Logs
+}
+
+# Load Application Usage Store
+$Usage = load-usage -File $UsageFile
+
+#Get Events
+$Applocker = get-applockerlogs -EventsAfter $Usage.LastUpdate
+
+#Save Timestamp
+$TimeStamp = (get-date)
+
+#Process Events into Application Usage Store
+foreach ($Event in $Applocker){{
+    
+    if (!($Event.Message -match '(.*?\\([^\\]*?) was allowed to run.)')) {{ continue; }
+
+    $Hash = ([System.BitConverter]::ToString($Event.Properties[12].Value)).replace("-","")
+
+    if (!($Usage.Applications.get_item("$Hash"))) {{
+
+        $Exe = $Matches[2]
+        $Path = $Matches[1]
+
+        if ($Event.Properties[14].Value -match "(\d+\.*)+$") {{
+            $Version = $Matches[0]
+        } else {{
+            $Version = "N/A"
+        }
+
+        $Usage.Applications.add("$Hash",(new-object psobject -Property @{{
+            Exe = $Exe
+            Version = $Version
+            Path = $Path
+            Count = 1
+            Last = $Event.TimeCreated
+        }))
+
+        #write-verbose "Adding $($NewApp.Exe) with hash $Hash to count 1"
+    } else {{
+        $Usage.Applications.get_item("$Hash").Count+=1
+        $Usage.Applications.get_item("$Hash").Last = $Event.TimeCreated
+
+        #write-verbose "Updating $($Usage.Applications.get_item("$Hash").Exe) with hash $Hash to count $($Usage.Applications.get_item("$Hash").Count)"
+    }
+}
+
+#Save TimeStamp
+$Usage.LastUpdate = $TimeStamp
+
+#Output updated Application Usage Store
+$Usage | Export-Clixml $UsageFile
+
+_end_
+
+move __createfile powershell.ps1
+
+override wait
+hidden=true
+completion=job
+wait "{parameter "PowershellExe"}" -ExecutionPolicy Bypass -NoProfile -File powershell.ps1 -UsageFile "{parameter "Storage"}\AppUsage.xml"]]></ActionScript>
+			<SuccessCriteria Option="RunToCompletion"></SuccessCriteria>
+		</DefaultAction>
+	</Fixlet>
+</BES>
