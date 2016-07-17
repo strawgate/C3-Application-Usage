@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Analysis>
+		<Title>Application Usage - Accounting - Windows</Title>
+		<Description><![CDATA[<P>This analysis provides information on the usage of Accounting applications.</P>
+<P>For general information or to report issues with C3 Application Usage content please visit GitHub here: <A href="https://github.com/strawgate/C3-Application-Usage">https://github.com/strawgate/C3-Application-Usage</A></P>]]></Description>
+		<Relevance>windows of operating system</Relevance>
+		<Relevance>exists file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client</Relevance>
+		<Source>Internal</Source>
+		<SourceReleaseDate>2016-07-17</SourceReleaseDate>
+		<Domain>BESC</Domain>
+		<Property Name="Application Last Usage  - PeachTree - Windows" ID="1" EvaluationPeriod="P1D"><![CDATA[maximum of ((format "{0} {1} {2}" + substring (8,2) of it + month (substring (5,2) of it as integer) as three letters as string + substring (0,4) of it) as string as date & ((format "{0}:{1}:{2}" + substring (11,2) of it + substring (14,2) of it + substring (17,2) of it) as string as time_of_day & local time zone)) of (select "Obj/MS/DT" of it as text) of selects "/Objs/Obj/MS/Obj/DCT/En[Obj/MS/S[@N = 'Exe'] = 'PEACHW.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client | error "none"]]></Property>
+		<Property Name="Application Usage Count - PeachTree - Windows" ID="2" EvaluationPeriod="P1D">(sum of (select "Obj/MS/I32[@N = 'Count']" of it as text as integer) of selects "/Objs/Obj/MS/Obj/DCT/En[Obj/MS/S[@N = 'Exe'] = 'PEACHW.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client)</Property>
+		<Property Name="Application Last Usage  - Quickbooks - Windows" ID="3" EvaluationPeriod="P1D"><![CDATA[maximum of ((format "{0} {1} {2}" + substring (8,2) of it + month (substring (5,2) of it as integer) as three letters as string + substring (0,4) of it) as string as date & ((format "{0}:{1}:{2}" + substring (11,2) of it + substring (14,2) of it + substring (17,2) of it) as string as time_of_day & local time zone)) of (select "Obj/MS/DT" of it as text) of selects "/Objs/Obj/MS/Obj/DCT/En[Obj/MS/S[@N = 'Exe'] = 'QBW32.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client | error "none"]]></Property>
+		<Property Name="Application Usage Count - Quickbooks - Windows" ID="4" EvaluationPeriod="P1D">(sum of (select "Obj/MS/I32[@N = 'Count']" of it as text as integer) of selects "/Objs/Obj/MS/Obj/DCT/En[Obj/MS/S[@N = 'Exe'] = 'QBW32.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client)</Property>
+	</Analysis>
+</BES>
