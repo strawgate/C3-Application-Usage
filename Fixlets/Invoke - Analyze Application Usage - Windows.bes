@@ -63,7 +63,7 @@ function get-ApplockerLogs {{
 
     $Logs = get-winevent -logname "Microsoft-Windows-AppLocker/EXE and DLL" -FilterXPath "*[System[TimeCreated[@SystemTime > '$SearchTime']]]"
 
-    return $Logs
+    return $Logs | sort-object -property TimeCreated
 }
 
 # Load Application Usage Store
