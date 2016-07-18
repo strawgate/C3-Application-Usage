@@ -78,7 +78,7 @@ $TimeStamp = (get-date)
 #Process Events into Application Usage Store
 foreach ($Event in $Applocker){{
     
-    if (!($Event.Message -match '(.*?\\([^\\]*?) was allowed to run.)')) {{ continue; }
+    if (!($Event.Message -match '(.*?\\([^\\]*?)) was allowed to run.')) {{ continue; }
 
     $Hash = ([System.BitConverter]::ToString($Event.Properties[12].Value)).replace("-","")
 
