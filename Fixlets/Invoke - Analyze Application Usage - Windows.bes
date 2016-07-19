@@ -92,7 +92,7 @@ foreach ($Event in $Applocker){{
         } else {{
             $Version = "N/A"
         }
-		if (!($FirstUpdate)) {{
+		if (!($Usage.FirstUpdate)) {{
 			$Usage.FirstUpdate = $Event.TimeCreated
 		}
 
