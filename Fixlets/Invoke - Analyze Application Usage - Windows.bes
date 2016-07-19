@@ -46,7 +46,7 @@ function load-usage {{
         return Import-Clixml $File
     } catch {{
         return new-object psobject -property @{{
-            FirstUpdate = (get-date)
+            FirstUpdate = $null
             LastUpdate = $null
             Applications = @{{}
         }
@@ -92,6 +92,9 @@ foreach ($Event in $Applocker){{
         } else {{
             $Version = "N/A"
         }
+		if (!($FirstUpdate)) {{
+			$Usage.FirstUpdate = $Event.TimeCreated
+		}
 
         $Usage.Applications.add("$Hash",(new-object psobject -Property @{{
             Exe = $Exe
