@@ -3,7 +3,8 @@
 <BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
 	<Fixlet>
 		<Title>Invoke - Analyze Application Usage - Windows</Title>
-		<Description><![CDATA[&lt;enter a description of the problem and the corrective action here&gt; ]]></Description>
+		<Description><![CDATA[<P>This Fixlet does an extraction of Applocker Logs from the system and stores the results in an XML document in the __Global\C3AppUsage folder. This XML document can then be read to track application usage.</P>
+<P>For general information or to report issues with C3 Application Usage content please visit GitHub here: <A href="https://github.com/strawgate/C3-Application-Usage">https://github.com/strawgate/C3-Application-Usage</A></P>]]></Description>
 		<Relevance>windows of operating system</Relevance>
 		<Relevance>exists keys of key "HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\SrpV2" of native registry </Relevance>
 		<Category></Category>
@@ -33,23 +34,20 @@ delete powershell.ps1
 
 createfile until _end_
 param (
-    $UsageFile = "AppUsage.xml"
+    $UsageFile = "$PSScriptRoot\AppUsage.xml"
 )
-
-$VerbosePreference = "Continue";
 
 function load-usage {{
     param (
         [string] $File
     )
     try {{
-        return Import-Clixml $File
+        [XML] $XML = New-Object System.XML.XMLDocument
+        $XML.Load($UsageFile)
+
+        return $XML
     } catch {{
-        return new-object psobject -property @{{
-            FirstUpdate = $null
-            LastUpdate = $null
-            Applications = @{{}
-        }
+        return [xml] '<Usage><FirstUpdate><Date></Date><Time></Time><DateTime></DateTime></FirstUpdate><LastUpdate><Date></Date><Time></Time><DateTime></DateTime></LastUpdate><Applications></Applications></Usage>'
     }
 }
 
@@ -58,22 +56,36 @@ function get-ApplockerLogs {{
         $EventsAfter
     )
     if (!($EventsAfter)) {{ $EventsAfter = [datetime] (0) }
-
     $SearchTime = $EventsAfter.ToUniversalTime().ToString("o")
+	$EventsAfter = [DateTime] $EventsAfter
 
     $Logs = get-winevent -logname "Microsoft-Windows-AppLocker/EXE and DLL" -FilterXPath "*[System[TimeCreated[@SystemTime > '$SearchTime']]]"
 
     return $Logs | sort-object -property TimeCreated
 }
 
+function set-datetime {{
+    param (
+        $XMLNode,
+        [DateTime]$DateTime
+    )
+	$XMLNode.Date = $DateTime.ToString("ddd, dd MMM yyyy")
+    $XMLNode.Time = $DateTime.ToString("HH:mm:ss")
+    $XMLNode.DateTime = "$($DateTime.GetDateTimeFormats("o"))"
+}
+
 # Load Application Usage Store
 $Usage = load-usage -File $UsageFile
 
-#Get Events
-$Applocker = get-applockerlogs -EventsAfter $Usage.LastUpdate
+$Applications = $Usage.SelectSingleNode("/Usage/Applications")
 
-#Save Timestamp
-$TimeStamp = (get-date)
+$FirstUpdate = $Usage.SelectSingleNode("/Usage/FirstUpdate")
+$LastUpdate = $Usage.SelectSingleNode("/Usage/LastUpdate")
+
+#Get Events
+$Applocker = get-applockerlogs -EventsAfter ($LastUpdate.DateTime)
+
+if (!($Applocker)) {{ write-verbose "No new logs. Exiting."; exit}
 
 #Process Events into Application Usage Store
 foreach ($Event in $Applocker){{
@@ -82,42 +94,45 @@ foreach ($Event in $Applocker){{
 
     $Hash = ([System.BitConverter]::ToString($Event.Properties[12].Value)).replace("-","")
 
-    if (!($Usage.Applications.get_item("$Hash"))) {{
+    if (!($Applications.SelectSingleNode("/Usage/Applications/App[@Hash = '$Hash']"))){{
+        #Pull Out Regex Matches
+        $Exe = $Matches[2]; $Path = $Matches[1]; $Version = "N/A"
 
-        $Exe = $Matches[2]
-        $Path = $Matches[1]
+        # Get Version if it's available
+        if ($Event.Properties[14].Value -match "(\d+\.*)+$") {{ $Version = $Matches[0]}
+        # If we've never set FirstUpdate, set it now
+		if (!($FirstUpdate.DateTime)) {{ set-datetime -XMLNode $FirstUpdate -DateTime $Event.TimeCreated }
 
-        if ($Event.Properties[14].Value -match "(\d+\.*)+$") {{
-            $Version = $Matches[0]
-        } else {{
-            $Version = "N/A"
-        }
-		if (!($Usage.FirstUpdate)) {{
-			$Usage.FirstUpdate = [DateTime]$Event.TimeCreated
-		}
+        # Create XML Node
+        [xml]$XML = @"
+<App Hash="$Hash">
+    <Path>$Path</Path>
+    <Exe>$Exe</Exe>
+    <Date></Date>
+    <Time></Time>
+    <DateTime></DateTime>
+    <Version>$Version</Version>
+    <Count>1</Count>
+</App>
+"@
+        set-datetime -XMLNode $XML.App -DateTime $Event.TimeCreated
 
-        $Usage.Applications.add("$Hash",(new-object psobject -Property @{{
-            Exe = $Exe
-            Version = $Version
-            Path = $Path
-            Count = 1
-            Last = $Event.TimeCreated
-        }))
-
-        #write-verbose "Adding $($NewApp.Exe) with hash $Hash to count 1"
+        $Applications.AppendChild($Usage.ImportNode($XML.app, $true)) | out-null
     } else {{
-        $Usage.Applications.get_item("$Hash").Count+=1
-        $Usage.Applications.get_item("$Hash").Last = $Event.TimeCreated
+        $Node = $Applications.SelectSingleNode("/Usage/Applications/App[@Hash = '$Hash']")
 
-        #write-verbose "Updating $($Usage.Applications.get_item("$Hash").Exe) with hash $Hash to count $($Usage.Applications.get_item("$Hash").Count)"
+        set-datetime -XMLNode $Node -DateTime $Event.TimeCreated
+
+        $Node.Count = "$([int]$Node.Count + 1)"
     }
 }
 
 #Save TimeStamp
-$Usage.LastUpdate = $TimeStamp
+Set-datetime -XMLNode $LastUpdate -DateTime $Event.TimeCreated
 
 #Output updated Application Usage Store
-$Usage | Export-Clixml $UsageFile
+#$Usage.OuterXml > $Usage
+$Usage.Save($UsageFile)
 
 _end_
 

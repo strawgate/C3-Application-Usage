@@ -10,6 +10,6 @@
 		<Source>Internal</Source>
 		<SourceReleaseDate>2016-07-16</SourceReleaseDate>
 		<Domain>BESC</Domain>
-		<Property Name="Application Usage - Raw Results - Windows" ID="1" EvaluationPeriod="P7D"><![CDATA[(select "Obj/MS/S[@N = 'Exe']" of it as text, ((format "{0} {1} {2}" + substring (8,2) of it + month (substring (5,2) of it as integer) as three letters as string + substring (0,4) of it) as string as date & ((format "{0}:{1}:{2}" + substring (11,2) of it + substring (14,2) of it + substring (17,2) of it) as string as time_of_day & local time zone)) of (select "Obj/MS/DT" of it as text), select "Obj/MS/I32" of it as text, select "Obj/MS/S[@N = 'Version']" of it as text, select "S" of it as text) of selects "/Objs/Obj/MS/Obj/DCT/En" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client]]></Property>
+		<Property Name="Application Usage - Raw Results - Windows" ID="1" EvaluationPeriod="P7D">(select "Exe" of it as text, select "Version" of it as text, attribute "Hash" of it as text) of selects "/Usage/Applications/App" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client</Property>
 	</Analysis>
 </BES>

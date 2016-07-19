@@ -10,8 +10,8 @@
 		<Source>Internal</Source>
 		<SourceReleaseDate>2016-07-16</SourceReleaseDate>
 		<Domain>BESC</Domain>
-		<Property Name="Usage - First Updated - Windows" ID="2" EvaluationPeriod="P1D"><![CDATA[((format "{0} {1} {2}" + substring (8,2) of it + month (substring (5,2) of it as integer) as three letters as string + substring (0,4) of it) as string as date & ((format "{0}:{1}:{2}" + substring (11,2) of it + substring (14,2) of it + substring (17,2) of it) as string as time_of_day & local time zone)) of (selects "/Objs/Obj/MS/*[@N = 'FirstUpdate']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client as text)]]></Property>
-		<Property Name="Usage - Last Updated - Windows" ID="3" EvaluationPeriod="P1D"><![CDATA[((format "{0} {1} {2}" + substring (8,2) of it + month (substring (5,2) of it as integer) as three letters as string + substring (0,4) of it) as string as date & ((format "{0}:{1}:{2}" + substring (11,2) of it + substring (14,2) of it + substring (17,2) of it) as string as time_of_day & local time zone)) of (selects "/Objs/Obj/MS/Obj[@N = 'LastUpdate']/DT" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client as text)]]></Property>
+		<Property Name="Usage - First Updated - Windows" ID="2" EvaluationPeriod="P1D"><![CDATA[(select "Date" of it as text as date & (select "Time" of it as text as time_of_day & local time zone)) of selects "/Usage/FirstUpdate" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client]]></Property>
+		<Property Name="Usage - Last Updated - Windows" ID="3" EvaluationPeriod="P1D"><![CDATA[(select "Date" of it as text as date & (select "Time" of it as text as time_of_day & local time zone)) of selects "/Usage/LastUpdate" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client]]></Property>
 		<Property Name="Usage - Database Size - Windows" ID="5" EvaluationPeriod="P1D">size of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client</Property>
 	</Analysis>
 </BES>
