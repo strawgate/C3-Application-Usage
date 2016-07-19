@@ -93,7 +93,7 @@ foreach ($Event in $Applocker){{
             $Version = "N/A"
         }
 		if (!($Usage.FirstUpdate)) {{
-			$Usage.FirstUpdate = $Event.TimeCreated
+			$Usage.FirstUpdate = [DateTime]$Event.TimeCreated
 		}
 
         $Usage.Applications.add("$Hash",(new-object psobject -Property @{{
