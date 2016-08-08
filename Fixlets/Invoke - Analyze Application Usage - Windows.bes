@@ -47,7 +47,7 @@ function load-usage {{
 
         return $XML
     } catch {{
-        return [xml] '<Usage><FirstUpdate><Date></Date><Time></Time><DateTime></DateTime></FirstUpdate><LastUpdate><Date></Date><Time></Time><DateTime></DateTime></LastUpdate><Applications></Applications></Usage>'
+        return [xml] '<Usage><FirstUpdate><Date></Date><Time></Time><DateTime></DateTime></FirstUpdate><LastUpdate><Date>Monday, January 1, 0001</Date><Time>12:00:00 AM</Time><DateTime>0001-01-01T06:00:00.0000000Z</DateTime></LastUpdate><Applications></Applications></Usage>'
     }
 }
 
@@ -55,11 +55,7 @@ function get-ApplockerLogs {{
     param (
         $EventsAfter
     )
-    if (!($EventsAfter)) {{ $EventsAfter = [datetime] (0) }
-    $SearchTime = $EventsAfter.ToUniversalTime().ToString("o")
-	$EventsAfter = [DateTime] $EventsAfter
-
-    $Logs = get-winevent -logname "Microsoft-Windows-AppLocker/EXE and DLL" -FilterXPath "*[System[TimeCreated[@SystemTime > '$SearchTime']]]"
+    $Logs = get-winevent -logname "Microsoft-Windows-AppLocker/EXE and DLL" -FilterXPath "*[System[TimeCreated[@SystemTime > '$EventsAfter']]]"
 
     return $Logs | sort-object -property TimeCreated
 }
