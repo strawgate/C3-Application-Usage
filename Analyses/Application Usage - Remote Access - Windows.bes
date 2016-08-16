@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Analysis>
+		<Title>Application Usage - Remote Access - Windows</Title>
+		<Description><![CDATA[<P>This analysis provides information on the usage of Remote Access applications.</P>
+<P>For general information or to report issues with C3 Application Usage content please visit GitHub here: <A href="https://github.com/strawgate/C3-Application-Usage">https://github.com/strawgate/C3-Application-Usage</A></P>]]></Description>
+		<Relevance>true</Relevance>
+		<Source>Internal</Source>
+		<SourceReleaseDate>2016-08-08</SourceReleaseDate>
+		<Domain>BESC</Domain>
+		<Property Name="Application Last Usage - Remote Desktop - Windows" ID="1" EvaluationPeriod="P1D"><![CDATA[maximum of (select "Date" of it as text as date & (select "Time" of it as text as time_of_day & local time zone)) of selects "/Usage/Applications/App[Exe = 'MSTSC.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client | error "none"]]></Property>
+		<Property Name="Application Usage Count - Remote Desktop - Windows" ID="2" EvaluationPeriod="P1D">(sum of (select "Count" of it as text as integer) of selects "/Usage/Applications/App[Exe = 'MSTSC.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client)</Property>
+		<Property Name="Application Last Usage - TeamViewer - Windows" ID="3" EvaluationPeriod="P1D"><![CDATA[maximum of (select "Date" of it as text as date & (select "Time" of it as text as time_of_day & local time zone)) of selects "/Usage/Applications/App[Exe = 'TEAMVIEWER.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client | error "none"]]></Property>
+		<Property Name="Application Usage Count - TeamViewer - Windows" ID="4" EvaluationPeriod="P1D">(sum of (select "Count" of it as text as integer) of selects "/Usage/Applications/App[Exe = 'TEAMVIEWER.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client)</Property>
+	</Analysis>
+</BES>
