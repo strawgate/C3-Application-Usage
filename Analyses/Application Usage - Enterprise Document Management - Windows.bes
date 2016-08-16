@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BES xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="BES.xsd">
+	<Analysis>
+		<Title>Application Usage - Enterprise Document Management - Windows</Title>
+		<Description><![CDATA[<DIV class=subsection>This analysis provides information on the usage of Enterprise Document Management applications. 
+<P>For general information or to report issues with C3 Application Usage content please visit GitHub here: <A href="https://github.com/strawgate/C3-Application-Usage">https://github.com/strawgate/C3-Application-Usage</A></P></DIV>]]></Description>
+		<Relevance>windows of operating system</Relevance>
+		<Relevance>exists file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client</Relevance>
+		<Relevance>exists selects "/Usage/Applications" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client</Relevance>
+		<Source>Internal</Source>
+		<SourceReleaseDate>2016-08-08</SourceReleaseDate>
+		<Domain>BESC</Domain>
+		<Property Name="Application Last Usage - Feith View - Windows" ID="1" EvaluationPeriod="P1D"><![CDATA[maximum of (select "Date" of it as text as date & (select "Time" of it as text as time_of_day & local time zone)) of selects "/Usage/Applications/App[Exe = 'FDD.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client | error "none"]]></Property>
+		<Property Name="Application Usage Count - Feith View - Windows" ID="2" EvaluationPeriod="P1D">(sum of (select "Count" of it as text as integer) of selects "/Usage/Applications/App[Exe = 'FDD.EXE']" of xml document of file "AppUsage.xml" of folder "C3AppUsage" of folder "__Global" of data folder of client)</Property>
+	</Analysis>
+</BES>
